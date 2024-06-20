@@ -26,6 +26,7 @@ model Game {
   userId     Int
   score      Int
   aiAssisted Boolean  @default(false)
+  shoe       String   // Add this line to store the shoe
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id])
