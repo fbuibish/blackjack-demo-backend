@@ -3,7 +3,7 @@ import { initializeShoe, drawCard, calculateHandValue, Card } from '../utils/car
 import { Server } from 'socket.io';
 const blackjackAi = require('blackjack-strategy');
 
-const blackjackOptions = {
+const baseBlackjackOptions = {
   hitSoft17: false,             // Does dealer hit soft 17
   surrender: "none",           // Surrender offered - none, late, or early
   double: "any",               // Double rules - none, 10or11, 9or10or11, any
@@ -22,13 +22,30 @@ const blackjackOptions = {
                               // exactComposition, bjc-supereasy (v1.4 or higher),
                               // bjc-simple (v1.4 or higher), or bjc-great
                               // (v1.4 or higer) - see below for details
-}
+};
 
 const getAISuggestion = (playerCards: Card[], dealerShowing: Card) => {
-  const values = playerCards.map(card => card.value > 10 ? 10 : card.value);
-  const reccommendation = blackjackAi.GetRecommendedPlayerAction(values, dealerShowing.value, 1, true, blackjackOptions);
+  const playerValues = playerCards.map(card => card.value > 10 ? 10 : card.value);
 
-  return reccommendation;
+  const reccommendations = [
+    {
+      aiName: 'Advanced',
+      reccommendation: blackjackAi.GetRecommendedPlayerAction(playerValues, dealerShowing.value, 1, true, 
+        {...baseBlackjackOptions, strategyComplexity: "advanced" }),
+    },
+    {
+      aiName: 'Simple',
+      reccommendation: blackjackAi.GetRecommendedPlayerAction(playerValues, dealerShowing.value, 1, true, 
+        {...baseBlackjackOptions, strategyComplexity: "simple" }),
+    },
+    {
+      aiName: 'bcj-Great',
+      reccommendation: blackjackAi.GetRecommendedPlayerAction(playerValues, dealerShowing.value, 1, true, 
+        {...baseBlackjackOptions, strategyComplexity: "bjc-great" }),
+    }
+  ];
+
+  return reccommendations;
 }
 
 const getGameState = async (roundId: number) => {
@@ -239,9 +256,10 @@ const getGameState = async (roundId: number) => {
     playerHands: activePlayerHands && activePlayerHands.map(ph => ({ ...ph, cards: JSON.parse(ph.cards)})),
     dealerHand: activeDealerHand && { ...activeDealerHand, cards: JSON.parse(activeDealerHand.cards)},
     availableActions,
-    aiSuggestion: activePlayerHand && activeDealerHand ? 
-      getAISuggestion(JSON.parse(activePlayerHand.cards), JSON.parse(activeDealerHand.cards)) : null,
+    aiSuggestions: activePlayerHand && activeDealerHand ? 
+      getAISuggestion(JSON.parse(activePlayerHand.cards), JSON.parse(activeDealerHand.cards)) : [],
     finishedHands: parsedFinishedHands,
+    aiAssisted: round.aiAssisted,
   }
 };
 

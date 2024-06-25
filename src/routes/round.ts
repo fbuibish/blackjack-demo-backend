@@ -4,29 +4,28 @@ import prisma from '../utils/prisma';
 
 const router = express.Router();
 
-router.get('/round/:roundId', async (req, res) => {
-  const { roundId } = req.params;
-
+router.get('/', async (req, res) => {
   try {
-    const round = await prisma.round.findUnique({
-      where: { id: parseInt(roundId, 10) },
+    const rounds = await prisma.round.findMany({
       include: {
+        user: true,
         hands: {
           include: {
             playerHands: true,
           },
         },
       },
+      orderBy: {
+        stack: 'desc',
+      },
     });
 
-    if (!round) {
+    if (!rounds) {
       return res.status(404).json({ error: 'Round not found' });
     }
 
     return res.json({
-      round,
-      hands: round.hands,
-      finalStack: round.stack,
+      rounds,
     });
   } catch (error) {
     console.error('Error fetching round:', error);

@@ -24,7 +24,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/api/user', userRoutes); // Assuming you have user routes defined
-app.use('/api/round', roundRouter);
+app.use('/api/rounds', roundRouter);
 
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
