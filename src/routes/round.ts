@@ -13,7 +13,7 @@ router.get('/round/:roundId', async (req, res) => {
       include: {
         hands: {
           include: {
-            cardGroups: true,
+            playerHands: true,
           },
         },
       },

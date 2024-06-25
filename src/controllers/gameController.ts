@@ -111,15 +111,9 @@ const getGameState = async (roundId: number) => {
       }
 
       // calculate payouts
-      const notLosingPlayerHands = await prisma.playerHand.findMany({
+      const allPlayerHands = await prisma.playerHand.findMany({
         where: {
           handId: activeHand.id,
-          OR: [
-            { outcome: 'blackjack' },
-            { outcome: 'win' },
-            { outcome: 'push' },
-            { outcome: null },
-          ],
         },
       });
       const dealerHand = await prisma.dealerHand.findFirstOrThrow({
@@ -128,7 +122,7 @@ const getGameState = async (roundId: number) => {
 
       const dealerTotal = calculateHandValue(JSON.parse(dealerHand.cards));
 
-      for (const playerHand of notLosingPlayerHands) {
+      for (const playerHand of allPlayerHands) {
         const playerTotal = calculateHandValue(JSON.parse(playerHand.cards));
         if (playerHand.outcome === 'blackjack') {
           const payout = calculatePayout(playerHand.wager, 'blackjack');
@@ -142,7 +136,7 @@ const getGameState = async (roundId: number) => {
             }
           });
         }
-        if (dealerTotal > 21 || playerTotal > dealerTotal) {
+        if (playerTotal <= 21 && (dealerTotal > 21 || playerTotal > dealerTotal || playerHand.outcome === 'win')) {
           const payout = calculatePayout(playerHand.wager, 'standard');
           await prisma.playerHand.update({
             where: { id: playerHand.id }, data: { outcome: 'win', stackDiff: payout - playerHand.wager}
@@ -153,7 +147,7 @@ const getGameState = async (roundId: number) => {
               stack: round.stack + payout,
             }
           });
-        } else if (playerTotal === dealerTotal) {
+        } else if (playerTotal === dealerTotal || playerHand.outcome === 'push') {
           await prisma.playerHand.update({
             where: { id: playerHand.id }, data: { outcome: 'push', stackDiff: 0 }
           })
@@ -209,7 +203,7 @@ const getGameState = async (roundId: number) => {
 
   return {
     roundId: round.id,
-    stack: round.stack,
+    stack: updatedRound.stack,
     activePlayerHandId: activePlayerHandId,
     playerHands: activePlayerHands && activePlayerHands.map(ph => ({ ...ph, cards: JSON.parse(ph.cards)})),
     dealerHand: activeDealerHand && { ...activeDealerHand, cards: JSON.parse(activeDealerHand.cards)},
