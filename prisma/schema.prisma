@@ -8,41 +8,57 @@ generator client {
   provider = "prisma-client-js"
 }
 
-model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
-  rounds    Round[]  // Relation to Round
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum Outcome {
+  blackjack
+  win
+  lose
+  push
 }
 
-model Round {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  user       User     @relation(fields: [userId], references: [id])
-  shoe       String   // JSON string of the shoe (array of cards)
-  stack      Int      @default(1000) // Initial stack amount
-  aiAssisted Boolean
-  hands      Hand[]   // Relation to Hand
-  createdAt  DateTime @default(now())
+model DealerHand {
+  id         Int    @id @default(autoincrement())
+  handId     Int    @unique
+  hand       Hand   @relation(fields: [handId], references: [id])
+  cards      String // JSON string of the cards (array of cards)
 }
 
-model Hand {
-  id         Int         @id @default(autoincrement())
-  roundId    Int
-  round      Round       @relation(fields: [roundId], references: [id])
-  cardGroups CardGroup[] // Relation to CardGroup
-  outcome    String      // 'win', 'lose', or 'push'
-  createdAt  DateTime @default(now())
-}
-
-model CardGroup {
+model PlayerHand {
   id         Int    @id @default(autoincrement())
   handId     Int
   hand       Hand   @relation(fields: [handId], references: [id])
   cards      String // JSON string of the cards (array of cards)
-  isSplit    Boolean
   wager      Int
+  outcome    Outcome?
+  playerDone Boolean  @default(false)
+  stackDiff  Int?
   createdAt  DateTime @default(now())
+}
+
+model Hand {
+  id          Int          @id @default(autoincrement())
+  roundId     Int
+  round       Round        @relation(fields: [roundId], references: [id])
+  isActive    Boolean
+  playerHands PlayerHand[]
+  dealerHand  DealerHand?
+  createdAt   DateTime     @default(now())
+}
+
+model Round {
+  id         Int          @id @default(autoincrement())
+  userId     Int
+  user       User         @relation(fields: [userId], references: [id])
+  shoe       String       // JSON string of the shoe (array of cards)
+  aiAssisted Boolean
+  stack      Int          @default(1000)
+  hands      Hand[]
+  createdAt  DateTime     @default(now())
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  name       String
+  email      String    @unique
+  rounds     Round[]
+  createdAt  DateTime  @default(now())
 }

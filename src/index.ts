@@ -6,6 +6,7 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import { setupGameSocket } from './controllers/gameController';
 import userRoutes from './routes/user'; // Assuming you have user routes defined
+import roundRouter from './routes/round';
 
 const app = express();
 const server = http.createServer(app);
@@ -23,6 +24,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use('/api/user', userRoutes); // Assuming you have user routes defined
+app.use('/api/round', roundRouter);
 
 const port = process.env.PORT || 3000;
 server.listen(port, () => {
