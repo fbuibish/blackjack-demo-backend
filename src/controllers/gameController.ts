@@ -49,6 +49,8 @@ const getAISuggestion = (playerCards: Card[], dealerShowing: Card) => {
 }
 
 const getGameState = async (roundId: number) => {
+  if (!roundId) return;
+
   const round = await prisma.round.findUnique({
     where: { id: roundId },
     include: {
