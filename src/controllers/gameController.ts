@@ -173,7 +173,7 @@ const getGameState = async (roundId: number) => {
         if (playerHand.outcome === 'blackjack') {
           const payout = calculatePayout(playerHand.wager, 'blackjack');
           await prisma.playerHand.update({
-            where: { id: playerHand.id }, data: { outcome: 'win', stackDiff: payout - playerHand.wager}
+            where: { id: playerHand.id }, data: { outcome: 'blackjack', stackDiff: payout - playerHand.wager}
           });
           await prisma.round.update({
             where: { id: round.id },
@@ -182,7 +182,7 @@ const getGameState = async (roundId: number) => {
             }
           });
         }
-        if (playerTotal <= 21 && (dealerTotal > 21 || playerTotal > dealerTotal || playerHand.outcome === 'win')) {
+        else if (playerTotal <= 21 && (dealerTotal > 21 || playerTotal > dealerTotal || playerHand.outcome === 'win')) {
           const payout = calculatePayout(playerHand.wager, 'standard');
           await prisma.playerHand.update({
             where: { id: playerHand.id }, data: { outcome: 'win', stackDiff: payout - playerHand.wager}
